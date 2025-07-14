@@ -1,0 +1,132 @@
+########################################################################################################################################
+# Simula um phantoma retangular com um feixe de fótons incidindo à 100cm de distância. Dá um output de dose no material para criação da
+# PDP para validação do espaço de fase que vai ser utilizado na simulação principal.
+# Feixe: Linear, Fótons
+# Física: g4em-standard_opt4
+# Geometrias: Phantoma de água (retangular)
+# Detectores: detector (retangular ou cilíndrico) dose no material.
+# Paralell: Não
+# Cronometrado: Não (mas pode ser no futuro)
+
+########################################################################################################################################
+i:So/IAEA_beam/NumberOfHistoriesInRun = 250000000 # Número de histórias
+#--------------------------------------------------------------------------------------------------------------------------------------#
+s:So/IAEA_beam/PhaseSpaceFileName     = "VarianClinaciX_6MV_20x20_w1"  #Nome dos arquivos header e espaço de fase. Utilizando 6MV 20x20
+										# Espaços de fase:
+										# VarianClinaciX_6MV_05x05
+										# VarianClinaciX_6MV_2x2
+										# VarianClinaciX_6MV_4x4
+										# VarianClinaciX_6MV_10x10_w1
+										# VarianClinaciX_6MV_20x20_w1
+										# ELEKTA_PRECISE_10mv_part1
+#--------------------------------------------------------------------------------------------------------------------------------------#
+########################################################################################################################################
+d:Ge/SAD				    			  = 100. cm  #Distância do feixe
+#--------------------------------------------------------------------------------------------------------------------------------------#
+# Detalhes
+i:Ts/Seed 			                  = 0
+i:Ts/NumberOfThreads                  = 0        #MultiThread ligado
+
+# Outputs no terminal
+i:Ts/ShowHistoryCountAtInterval       = 10000	#Intervalo de contagem de histórias no terminal.
+b:Ts/ShowCPUTime                      = "True"
+
+# Configurações para gráficos. GUI acelerada via software, sempre desabilitar quando for rodar a simulação em sí.
+Ts/UseQt					  				    = "False"    #Ativar somente para verificação visual, antes de simular.
+b:Gr/Enable                   				    = "False"    #Ativar somente para verificação visual, antes de simular.
+s:Gr/ViewA/Type                                 = "OpenGL"
+Ge/QuitIfOverlapDetected                        = "True"
+b:Gr/ViewA/HiddenLineRemovalForTrajectories     = "True"
+s:Gr/ViewA/CenterOn                             = "detector"
+b:Ts/PauseBeforeQuit                            = "True"
+i:Gr/ViewA/WindowSizeX                          = 900
+i:Gr/ViewA/WindowSizeY                          = 900
+d:Gr/ViewA/Theta                                = 55 deg
+d:Gr/ViewA/Phi                                  = 20 deg
+s:Gr/ViewA/Projection                           = "Perspective"
+d:Gr/ViewA/PerspectiveAngle                     = 30 deg
+u:Gr/ViewA/Zoom                                 = 1.3
+
+########################################################################################################################################
+# Física
+sv:Ph/Default/Modules = 1 "g4em-standard_opt4"     # Boa para baixas energias
+#Conhecidas: 7 "g4em-standard_opt4" "g4h-phy_QGSP_BIC_HP" "g4decay" "g4ion-binarycascade" "g4h-elastic_HP" “g4stopping" "g4em-penelope"
+
+########################################################################################################################################
+# Ambiente World da simulação
+s:Ge/World/Material  = "Air"
+b:Ge/World/Invisible =  "True"                      # Para otimizar a abertura do ambiente gráfico
+d:Ge/World/HLX       = Ge/SAD cm
+d:Ge/World/HLY       = Ge/SAD cm
+d:Ge/World/HLZ       = Ge/SAD cm
+
+########################################################################################################################################
+# Feixe
+
+# Posicionamento
+s:Ge/SourceStart/Parent            = "World"
+s:Ge/SourceStart/Type              = "Group"
+d:Ge/SourceStart/TransZ            =  -1 * Ge/World/HLZ cm
+
+# Parâmetros do espaço de fase
+s:So/IAEA_beam/Type                            				= "PhaseSpace"
+s:So/IAEA_beam/Component                      				= "SourceStart" #World
+b:So/IAEA_beam/LimitedAssumeFirstParticleIsNewHistory       = "true"
+#b:So/IAEA_beam/LimitedAssumeEveryParticleIsNewHistory 	    = "true"
+b:So/IAEA_beam/LimitedAssumePhotonIsNewHistory 				= "true"
+i:So/IAEA_beam/PhaseSpaceMultipleUse 						= 0
+b:So/IAEA_beam/PhaseSpacePreCheck 							= "False"  # Necessário utilizar somente uma vez. Desativar p simular
+i:So/IAEA_beam/PreCheckShowParticleCountAtInterval		    = 1000000
+
+########################################################################################################################################
+# Geometrias da simulação
+#--------------------------------------------------------------------------------------------------------------------------------------#
+# Phantoma de água de 60x60x30 cm
+s:Ge/phantoma/Parent   = "World"
+s:Ge/phantoma/Type     = "TsBox"
+s:Ge/phantoma/Material = "G4_WATER"
+d:Ge/phantoma/HLX      = 30.0 cm
+d:Ge/phantoma/HLY      = 30.0 cm
+d:Ge/phantoma/HLZ      = 15. cm
+d:Ge/phantoma/TransX   = 0. cm
+d:Ge/phantoma/TransY   = 0. cm
+d:Ge/phantoma/TransZ   = 15. cm
+d:Ge/phantoma/RotX     = 0. deg
+d:Ge/phantoma/RotY     = 0. deg
+d:Ge/phantoma/RotZ     = 0. deg
+s:Ge/phantoma/Color    = "blue"
+
+# Detector
+s:Ge/detector/Parent   = "phantoma"
+s:Ge/detector/Type     = "TsBox"
+s:Ge/detector/Material = "G4_WATER"
+d:Ge/detector/HLX      = 1. cm
+d:Ge/detector/HLY      = 1. cm
+d:Ge/detector/HLZ      = 15. cm
+d:Ge/detector/TransX   = 0. cm
+d:Ge/detector/TransY   = 0. cm
+d:Ge/detector/TransZ   = 0 cm
+d:Ge/detector/RotX     = 0. deg
+d:Ge/detector/RotY     = 0. deg
+d:Ge/detector/RotZ     = 0. deg
+s:Ge/detector/Color    = "red"
+#b:Ge/detector/IsParallel = "True"
+
+########################################################################################################################################
+# Scoring
+#--------------------------------------------------------------------------------------------------------------------------------------#
+s:Sc/Dose/Quantity 						      	  = "DoseToMedium"
+#s:Sc/Dose/Quantity                 	 	      = "DoseToMaterial"
+s:Sc/Dose/Component                			      = "detector"
+s:Sc/Dose/Material 						          = "G4_WATER"
+b:Sc/Dose/OutputToConsole         			      = "FALSE"
+b:Sc/Dose/PreCalculateStoppingPowerRatios         = "True"
+s:Sc/Dose/IfOutputFileAlreadyExists               = "Overwrite"
+s:Sc/Dose/OutputFile                              = "Dose"
+#b:Sc/Dose/PropagateToChildren 			          = "True"
+s:Sc/Dose/OutputType                	          = "csv"
+i:Sc/Dose/XBins 						          = 1
+i:Sc/Dose/YBins 						          = 1
+i:Sc/Dose/ZBins	 						          = 300
+sv:Sc/Dose/Report 							 	  = 1 “Mean”
+########################################################################################################################################
